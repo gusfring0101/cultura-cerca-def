@@ -1,11 +1,4 @@
 {
-  "version": 2,
-  "buildCommand": "npm ci && npm run build",
-  "outputDirectory": "dist",
-  "installCommand": "npm ci",
-  "framework": null,
-  "functions": {},
-  "crons": [],
   "rewrites": [
     {
       "source": "/(.*)",
