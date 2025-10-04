@@ -101,7 +101,42 @@ export default function App() {
       if (!response.ok) throw new Error(`Error ${response.status}`)
 
       const data = await response.json()
-      setResults(data)
+      console.log('📥 Respuesta completa:', data)
+      console.log('📥 Tipo de data:', typeof data, 'Es array:', Array.isArray(data))
+
+      // Extraer los resultados de la estructura de n8n
+      let finalResults = []
+
+      try {
+        if (Array.isArray(data) && data.length > 0) {
+          // Caso: [{ results: [...], fallback: false, debug: {...} }]
+          const firstItem = data[0]
+          console.log('📦 Primer elemento:', firstItem)
+
+          if (firstItem && Array.isArray(firstItem.results)) {
+            finalResults = firstItem.results
+            console.log('✅ Extraído data[0].results:', finalResults.length, 'elementos')
+          } else {
+            console.log('❌ data[0].results no es un array válido')
+            finalResults = []
+          }
+        } else if (data && Array.isArray(data.results)) {
+          // Caso: { results: [...] }
+          finalResults = data.results
+          console.log('✅ Extraído data.results:', finalResults.length, 'elementos')
+        } else {
+          console.log('❌ Estructura no reconocida, usando array vacío')
+          finalResults = []
+        }
+      } catch (error) {
+        console.error('❌ Error parseando resultados:', error)
+        finalResults = []
+      }
+
+      console.log('🎯 Resultados finales a mostrar:', finalResults)
+      console.log('🎯 Primer resultado de ejemplo:', finalResults[0])
+
+      setResults(finalResults)
     } catch (err) {
       setError(err.message)
     } finally {
@@ -299,152 +334,180 @@ export default function App() {
               🎉 {Array.isArray(results) ? results.length : 0} experiencias culturales encontradas
             </h3>
 
+            {/* Carousel Container */}
             <div style={{
-              display: 'grid',
-              gap: '15px',
-              maxHeight: '600px',
-              overflowY: 'auto'
+              position: 'relative',
+              width: '100%',
+              overflow: 'hidden',
+              borderRadius: '15px'
             }}>
-              {(Array.isArray(results) ? results : []).map((place, index) => (
-                <div key={index} style={{
-                  background: 'white',
-                  borderRadius: '12px',
-                  padding: '20px',
-                  boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-                  border: '1px solid #e9ecef',
-                  position: 'relative'
-                }}>
-                  {/* Score en la esquina superior derecha */}
-                  <div style={{
-                    position: 'absolute',
-                    top: '15px',
-                    right: '15px',
-                    background: '#667eea',
-                    color: 'white',
-                    padding: '4px 8px',
-                    borderRadius: '20px',
-                    fontSize: '0.8rem',
-                    fontWeight: '600'
+              <div style={{
+                display: 'flex',
+                gap: '20px',
+                overflowX: 'auto',
+                paddingBottom: '10px',
+                scrollBehavior: 'smooth',
+                scrollSnapType: 'x mandatory'
+              }}>
+                {(Array.isArray(results) ? results : []).map((place, index) => (
+                  <div key={place.id || index} style={{
+                    flex: '0 0 350px',
+                    background: 'white',
+                    borderRadius: '15px',
+                    padding: '25px',
+                    boxShadow: '0 8px 25px rgba(0,0,0,0.15)',
+                    border: '1px solid #e9ecef',
+                    scrollSnapAlign: 'start',
+                    position: 'relative',
+                    minHeight: '400px'
                   }}>
-                    ⭐ {place.score ? place.score.toFixed(2) : 'N/A'}
-                  </div>
+                    {/* Score Badge */}
+                    <div style={{
+                      position: 'absolute',
+                      top: '20px',
+                      right: '20px',
+                      background: 'linear-gradient(45deg, #667eea, #764ba2)',
+                      color: 'white',
+                      padding: '8px 12px',
+                      borderRadius: '25px',
+                      fontSize: '0.9rem',
+                      fontWeight: '700',
+                      boxShadow: '0 4px 12px rgba(102, 126, 234, 0.4)'
+                    }}>
+                      ⭐ {place.score ? place.score.toFixed(2) : 'N/A'}
+                    </div>
 
-                  {/* Título */}
-                  <h4 style={{
-                    margin: '0 0 10px 0',
-                    color: '#2c3e50',
-                    fontSize: '1.2rem',
-                    fontWeight: '600',
-                    paddingRight: '80px' // espacio para el score
-                  }}>
-                    {place.name || 'Lugar cultural'}
-                  </h4>
+                    {/* Nombre del lugar */}
+                    <h4 style={{
+                      margin: '0 0 15px 0',
+                      color: '#2c3e50',
+                      fontSize: '1.4rem',
+                      fontWeight: '700',
+                      paddingRight: '90px',
+                      lineHeight: '1.3'
+                    }}>
+                      {place.name || 'Lugar cultural'}
+                    </h4>
 
-                  {/* Tipo y categorías */}
-                  <div style={{ marginBottom: '12px' }}>
-                    <span style={{
+                    {/* Tipo */}
+                    <div style={{
                       background: '#e9ecef',
                       color: '#495057',
-                      padding: '4px 8px',
-                      borderRadius: '12px',
-                      fontSize: '0.8rem',
-                      fontWeight: '500',
-                      marginRight: '8px'
+                      padding: '6px 12px',
+                      borderRadius: '20px',
+                      fontSize: '0.85rem',
+                      fontWeight: '600',
+                      display: 'inline-block',
+                      marginBottom: '20px'
                     }}>
                       {place.type || 'Cultural'}
-                    </span>
-                    {place.tags && Array.isArray(place.tags) && place.tags.map((tag, tagIndex) => (
-                      <span key={tagIndex} style={{
-                        background: '#d4edda',
-                        color: '#155724',
-                        padding: '2px 6px',
-                        borderRadius: '8px',
-                        fontSize: '0.75rem',
-                        margin: '0 2px'
-                      }}>
-                        {tag}
-                      </span>
-                    ))}
+                    </div>
+
+                    {/* Información principal */}
+                    <div style={{ marginBottom: '20px' }}>
+                      {/* Distancia */}
+                      <div style={{ marginBottom: '12px' }}>
+                        <span style={{
+                          color: '#666',
+                          fontSize: '0.9rem',
+                          fontWeight: '500'
+                        }}>📍 Distancia:</span>
+                        <div style={{
+                          color: '#2c3e50',
+                          fontSize: '1.1rem',
+                          fontWeight: '600',
+                          marginTop: '4px'
+                        }}>
+                          {place.distanceKm ? `${place.distanceKm.toFixed(2)} km` : 'N/A'}
+                        </div>
+                      </div>
+
+                      {/* Precio */}
+                      <div style={{ marginBottom: '12px' }}>
+                        <span style={{
+                          color: '#666',
+                          fontSize: '0.9rem',
+                          fontWeight: '500'
+                        }}>💰 Precio:</span>
+                        <div style={{
+                          color: place.price === 0 ? '#28a745' : '#2c3e50',
+                          fontSize: '1.1rem',
+                          fontWeight: '600',
+                          marginTop: '4px'
+                        }}>
+                          {place.price === 0 ? 'Gratis' : place.price ? `${place.price}€` : 'N/A'}
+                        </div>
+                      </div>
+
+                      {/* Dirección */}
+                      {place.address && (
+                        <div style={{ marginBottom: '12px' }}>
+                          <span style={{
+                            color: '#666',
+                            fontSize: '0.9rem',
+                            fontWeight: '500'
+                          }}>🏠 Dirección:</span>
+                          <div style={{
+                            color: '#2c3e50',
+                            fontSize: '0.95rem',
+                            marginTop: '4px',
+                            lineHeight: '1.4'
+                          }}>
+                            {place.address}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Botón para más información */}
+                    {place.url && (
+                      <a
+                        href={place.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{
+                          display: 'block',
+                          background: 'linear-gradient(45deg, #667eea, #764ba2)',
+                          color: 'white',
+                          padding: '12px 20px',
+                          borderRadius: '10px',
+                          textDecoration: 'none',
+                          fontSize: '1rem',
+                          fontWeight: '600',
+                          textAlign: 'center',
+                          marginTop: 'auto',
+                          position: 'absolute',
+                          bottom: '25px',
+                          left: '25px',
+                          right: '25px',
+                          transition: 'transform 0.2s, box-shadow 0.2s'
+                        }}
+                        onMouseEnter={(e) => {
+                          e.target.style.transform = 'translateY(-2px)'
+                          e.target.style.boxShadow = '0 8px 20px rgba(102, 126, 234, 0.4)'
+                        }}
+                        onMouseLeave={(e) => {
+                          e.target.style.transform = 'translateY(0)'
+                          e.target.style.boxShadow = 'none'
+                        }}
+                      >
+                        🔗 Más información
+                      </a>
+                    )}
                   </div>
-
-                  {/* Información en grid */}
-                  <div style={{
-                    display: 'grid',
-                    gridTemplateColumns: '1fr 1fr',
-                    gap: '10px',
-                    marginBottom: '12px'
-                  }}>
-                    <div>
-                      <span style={{ color: '#666', fontSize: '0.9rem' }}>📍 Distancia:</span>
-                      <br />
-                      <strong style={{ color: '#2c3e50' }}>
-                        {place.distanceKm ? `${place.distanceKm.toFixed(2)} km` : 'N/A'}
-                      </strong>
-                    </div>
-                    <div>
-                      <span style={{ color: '#666', fontSize: '0.9rem' }}>💰 Precio:</span>
-                      <br />
-                      <strong style={{ color: place.price === 0 ? '#28a745' : '#2c3e50' }}>
-                        {place.price === 0 ? 'Gratis' : place.price ? `${place.price}€` : 'N/A'}
-                      </strong>
-                    </div>
-                  </div>
-
-                  {/* Dirección */}
-                  {place.address && (
-                    <div style={{ marginBottom: '12px' }}>
-                      <span style={{ color: '#666', fontSize: '0.9rem' }}>🏠 Dirección:</span>
-                      <br />
-                      <span style={{ color: '#2c3e50', fontSize: '0.95rem' }}>
-                        {place.address}
-                      </span>
-                    </div>
-                  )}
-
-                  {/* Botón para más información */}
-                  {place.url && (
-                    <a
-                      href={place.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      style={{
-                        display: 'inline-block',
-                        background: 'linear-gradient(45deg, #667eea, #764ba2)',
-                        color: 'white',
-                        padding: '8px 16px',
-                        borderRadius: '8px',
-                        textDecoration: 'none',
-                        fontSize: '0.9rem',
-                        fontWeight: '500',
-                        marginTop: '8px'
-                      }}
-                    >
-                      🔗 Más información
-                    </a>
-                  )}
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
 
-            {/* Mostrar JSON crudo como fallback si no es array */}
-            {results && !Array.isArray(results) && (
-              <details style={{ marginTop: '20px' }}>
-                <summary style={{ cursor: 'pointer', color: '#666' }}>
-                  Ver respuesta completa (debug)
-                </summary>
-                <pre style={{
-                  background: 'white',
-                  padding: '15px',
-                  borderRadius: '8px',
-                  overflow: 'auto',
-                  fontSize: '0.8rem',
-                  marginTop: '10px',
-                  border: '1px solid #dee2e6'
-                }}>
-                  {JSON.stringify(results, null, 2)}
-                </pre>
-              </details>
-            )}
+            {/* Indicador de deslizar */}
+            <div style={{
+              textAlign: 'center',
+              marginTop: '15px',
+              color: '#666',
+              fontSize: '0.9rem'
+            }}>
+              👈 Desliza para ver más experiencias 👉
+            </div>
           </div>
         )}
       </div>
