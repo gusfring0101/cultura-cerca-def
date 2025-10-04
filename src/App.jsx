@@ -295,19 +295,156 @@ export default function App() {
             background: '#f8f9fa',
             borderRadius: '15px'
           }}>
-            <h3 style={{ margin: '0 0 15px 0', color: '#2c3e50' }}>
-              🎉 Resultados encontrados
+            <h3 style={{ margin: '0 0 20px 0', color: '#2c3e50', textAlign: 'center' }}>
+              🎉 {Array.isArray(results) ? results.length : 0} experiencias culturales encontradas
             </h3>
-            <pre style={{
-              background: 'white',
-              padding: '15px',
-              borderRadius: '8px',
-              overflow: 'auto',
-              fontSize: '0.9rem',
-              maxHeight: '300px'
+
+            <div style={{
+              display: 'grid',
+              gap: '15px',
+              maxHeight: '600px',
+              overflowY: 'auto'
             }}>
-              {JSON.stringify(results, null, 2)}
-            </pre>
+              {(Array.isArray(results) ? results : []).map((place, index) => (
+                <div key={index} style={{
+                  background: 'white',
+                  borderRadius: '12px',
+                  padding: '20px',
+                  boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+                  border: '1px solid #e9ecef',
+                  position: 'relative'
+                }}>
+                  {/* Score en la esquina superior derecha */}
+                  <div style={{
+                    position: 'absolute',
+                    top: '15px',
+                    right: '15px',
+                    background: '#667eea',
+                    color: 'white',
+                    padding: '4px 8px',
+                    borderRadius: '20px',
+                    fontSize: '0.8rem',
+                    fontWeight: '600'
+                  }}>
+                    ⭐ {place.score ? place.score.toFixed(2) : 'N/A'}
+                  </div>
+
+                  {/* Título */}
+                  <h4 style={{
+                    margin: '0 0 10px 0',
+                    color: '#2c3e50',
+                    fontSize: '1.2rem',
+                    fontWeight: '600',
+                    paddingRight: '80px' // espacio para el score
+                  }}>
+                    {place.name || 'Lugar cultural'}
+                  </h4>
+
+                  {/* Tipo y categorías */}
+                  <div style={{ marginBottom: '12px' }}>
+                    <span style={{
+                      background: '#e9ecef',
+                      color: '#495057',
+                      padding: '4px 8px',
+                      borderRadius: '12px',
+                      fontSize: '0.8rem',
+                      fontWeight: '500',
+                      marginRight: '8px'
+                    }}>
+                      {place.type || 'Cultural'}
+                    </span>
+                    {place.tags && Array.isArray(place.tags) && place.tags.map((tag, tagIndex) => (
+                      <span key={tagIndex} style={{
+                        background: '#d4edda',
+                        color: '#155724',
+                        padding: '2px 6px',
+                        borderRadius: '8px',
+                        fontSize: '0.75rem',
+                        margin: '0 2px'
+                      }}>
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+
+                  {/* Información en grid */}
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: '1fr 1fr',
+                    gap: '10px',
+                    marginBottom: '12px'
+                  }}>
+                    <div>
+                      <span style={{ color: '#666', fontSize: '0.9rem' }}>📍 Distancia:</span>
+                      <br />
+                      <strong style={{ color: '#2c3e50' }}>
+                        {place.distanceKm ? `${place.distanceKm.toFixed(2)} km` : 'N/A'}
+                      </strong>
+                    </div>
+                    <div>
+                      <span style={{ color: '#666', fontSize: '0.9rem' }}>💰 Precio:</span>
+                      <br />
+                      <strong style={{ color: place.price === 0 ? '#28a745' : '#2c3e50' }}>
+                        {place.price === 0 ? 'Gratis' : place.price ? `${place.price}€` : 'N/A'}
+                      </strong>
+                    </div>
+                  </div>
+
+                  {/* Dirección */}
+                  {place.address && (
+                    <div style={{ marginBottom: '12px' }}>
+                      <span style={{ color: '#666', fontSize: '0.9rem' }}>🏠 Dirección:</span>
+                      <br />
+                      <span style={{ color: '#2c3e50', fontSize: '0.95rem' }}>
+                        {place.address}
+                      </span>
+                    </div>
+                  )}
+
+                  {/* Botón para más información */}
+                  {place.url && (
+                    <a
+                      href={place.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{
+                        display: 'inline-block',
+                        background: 'linear-gradient(45deg, #667eea, #764ba2)',
+                        color: 'white',
+                        padding: '8px 16px',
+                        borderRadius: '8px',
+                        textDecoration: 'none',
+                        fontSize: '0.9rem',
+                        fontWeight: '500',
+                        marginTop: '8px'
+                      }}
+                    >
+                      🔗 Más información
+                    </a>
+                  )}
+                </div>
+              ))}
+            </div>
+
+            {/* Mostrar JSON crudo como fallback si no es array */}
+            {results && !Array.isArray(results) && (
+              <details style={{ marginTop: '20px' }}>
+                <summary style={{ cursor: 'pointer', color: '#666' }}>
+                  Ver respuesta completa (debug)
+                </summary>
+                <pre style={{
+                  background: 'white',
+                  padding: '15px',
+                  borderRadius: '8px',
+                  overflow: 'auto',
+                  fontSize: '0.8rem',
+                  marginTop: '10px',
+                  border: '1px solid #dee2e6'
+                }}>
+                  {JSON.stringify(results, null, 2)}
+                </pre>
+              </details>
+            )}
           </div>
         )}
       </div>
