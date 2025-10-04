@@ -1,6 +1,51 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
 export default function App() {
+  // Add viewport meta tag for mobile responsiveness
+  useEffect(() => {
+    const viewport = document.querySelector('meta[name="viewport"]');
+    if (!viewport) {
+      const meta = document.createElement('meta');
+      meta.name = 'viewport';
+      meta.content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no';
+      document.getElementsByTagName('head')[0].appendChild(meta);
+    }
+
+    // Add custom CSS for better mobile scrolling
+    const style = document.createElement('style');
+    style.textContent = `
+      /* Better scrollbar styling */
+      #carousel-container::-webkit-scrollbar {
+        height: 8px;
+      }
+      #carousel-container::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 10px;
+      }
+      #carousel-container::-webkit-scrollbar-thumb {
+        background: linear-gradient(45deg, #667eea, #764ba2);
+        border-radius: 10px;
+      }
+      #carousel-container::-webkit-scrollbar-thumb:hover {
+        background: linear-gradient(45deg, #5a67d8, #6b46c1);
+      }
+
+      /* Touch-friendly mobile improvements */
+      @media (max-width: 768px) {
+        #carousel-container {
+          padding-bottom: 15px !important;
+        }
+        #carousel-container::-webkit-scrollbar {
+          height: 12px;
+        }
+      }
+    `;
+    document.head.appendChild(style);
+
+    return () => {
+      document.head.removeChild(style);
+    };
+  }, []);
   const [location, setLocation] = useState('')
   const [coordinates, setCoordinates] = useState(null)
   const [km, setKm] = useState(15)
@@ -148,7 +193,7 @@ export default function App() {
     <div style={{
       minHeight: '100vh',
       background: 'linear-gradient(135deg, #667eea, #764ba2)',
-      padding: '20px',
+      padding: window.innerWidth <= 768 ? '10px' : '20px',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
@@ -156,28 +201,29 @@ export default function App() {
     }}>
       <div style={{
         background: 'white',
-        borderRadius: '20px',
-        padding: '40px',
-        maxWidth: '600px',
+        borderRadius: window.innerWidth <= 768 ? '15px' : '20px',
+        padding: window.innerWidth <= 768 ? '20px' : '40px',
+        maxWidth: window.innerWidth <= 768 ? '100%' : '600px',
         width: '100%',
-        boxShadow: '0 20px 60px rgba(0,0,0,0.15)'
+        boxShadow: '0 20px 60px rgba(0,0,0,0.15)',
+        margin: window.innerWidth <= 768 ? '0' : 'auto'
       }}>
         <h1 style={{
           textAlign: 'center',
-          fontSize: '2.5rem',
+          fontSize: window.innerWidth <= 768 ? '2rem' : '2.5rem',
           fontWeight: '700',
           color: '#2c3e50',
-          margin: '0 0 30px 0'
+          margin: window.innerWidth <= 768 ? '0 0 20px 0' : '0 0 30px 0'
         }}>
           CulturaCerca
         </h1>
 
-        <form onSubmit={handleSearch} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+        <form onSubmit={handleSearch} style={{ display: 'flex', flexDirection: 'column', gap: window.innerWidth <= 768 ? '15px' : '20px' }}>
           <div>
-            <label style={{ display: 'block', fontWeight: '600', marginBottom: '8px' }}>
+            <label style={{ display: 'block', fontWeight: '600', marginBottom: '8px', fontSize: window.innerWidth <= 768 ? '0.9rem' : '1rem' }}>
               📍 Ubicación
             </label>
-            <div style={{ display: 'flex', gap: '10px' }}>
+            <div style={{ display: 'flex', gap: '10px', flexDirection: window.innerWidth <= 480 ? 'column' : 'row' }}>
               <input
                 type="text"
                 value={location}
@@ -217,7 +263,7 @@ export default function App() {
             )}
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: window.innerWidth <= 480 ? '1fr' : '1fr 1fr', gap: window.innerWidth <= 768 ? '15px' : '20px' }}>
             <div>
               <label style={{ display: 'block', fontWeight: '600', marginBottom: '8px' }}>
                 📏 Distancia (km)
@@ -266,8 +312,8 @@ export default function App() {
             </label>
             <div style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))',
-              gap: '10px'
+              gridTemplateColumns: window.innerWidth <= 480 ? 'repeat(auto-fit, minmax(100px, 1fr))' : 'repeat(auto-fit, minmax(120px, 1fr))',
+              gap: window.innerWidth <= 768 ? '8px' : '10px'
             }}>
               {prefOptions.map(pref => (
                 <button
@@ -341,25 +387,36 @@ export default function App() {
               overflow: 'hidden',
               borderRadius: '15px'
             }}>
-              <div style={{
-                display: 'flex',
-                gap: '20px',
-                overflowX: 'auto',
-                paddingBottom: '10px',
-                scrollBehavior: 'smooth',
-                scrollSnapType: 'x mandatory'
-              }}>
+              <div
+                id="carousel-container"
+                style={{
+                  display: 'flex',
+                  gap: window.innerWidth <= 768 ? '15px' : '20px',
+                  overflowX: 'auto',
+                  paddingBottom: '10px',
+                  scrollBehavior: 'smooth',
+                  scrollSnapType: 'x mandatory',
+                  WebkitOverflowScrolling: 'touch', // Smooth scrolling on iOS
+                  cursor: 'grab',
+                  // Mejorar la barra de scroll en móvil
+                  scrollbarWidth: 'thin',
+                  scrollbarColor: '#667eea #f1f1f1'
+                }}
+                onMouseDown={(e) => e.currentTarget.style.cursor = 'grabbing'}
+                onMouseUp={(e) => e.currentTarget.style.cursor = 'grab'}
+                onMouseLeave={(e) => e.currentTarget.style.cursor = 'grab'}
+              >
                 {(Array.isArray(results) ? results : []).map((place, index) => (
                   <div key={place.id || index} style={{
-                    flex: '0 0 350px',
+                    flex: window.innerWidth <= 768 ? '0 0 280px' : '0 0 350px',
                     background: 'white',
                     borderRadius: '15px',
-                    padding: '25px',
+                    padding: window.innerWidth <= 768 ? '20px' : '25px',
                     boxShadow: '0 8px 25px rgba(0,0,0,0.15)',
                     border: '1px solid #e9ecef',
                     scrollSnapAlign: 'start',
                     position: 'relative',
-                    minHeight: '400px'
+                    minHeight: window.innerWidth <= 768 ? '350px' : '400px'
                   }}>
                     {/* Score Badge */}
                     <div style={{
@@ -499,14 +556,70 @@ export default function App() {
               </div>
             </div>
 
+            {/* Controles de navegación para móvil */}
+            {window.innerWidth <= 768 && (
+              <div style={{
+                display: 'flex',
+                justifyContent: 'center',
+                gap: '15px',
+                marginTop: '20px'
+              }}>
+                <button
+                  onClick={() => {
+                    const container = document.getElementById('carousel-container');
+                    container.scrollBy({ left: -300, behavior: 'smooth' });
+                  }}
+                  style={{
+                    background: 'linear-gradient(45deg, #667eea, #764ba2)',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '50px',
+                    padding: '12px 20px',
+                    fontSize: '1.2rem',
+                    cursor: 'pointer',
+                    boxShadow: '0 4px 15px rgba(102, 126, 234, 0.3)',
+                    transition: 'transform 0.2s'
+                  }}
+                  onTouchStart={(e) => e.target.style.transform = 'scale(0.95)'}
+                  onTouchEnd={(e) => e.target.style.transform = 'scale(1)'}
+                >
+                  ← Anterior
+                </button>
+                <button
+                  onClick={() => {
+                    const container = document.getElementById('carousel-container');
+                    container.scrollBy({ left: 300, behavior: 'smooth' });
+                  }}
+                  style={{
+                    background: 'linear-gradient(45deg, #667eea, #764ba2)',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '50px',
+                    padding: '12px 20px',
+                    fontSize: '1.2rem',
+                    cursor: 'pointer',
+                    boxShadow: '0 4px 15px rgba(102, 126, 234, 0.3)',
+                    transition: 'transform 0.2s'
+                  }}
+                  onTouchStart={(e) => e.target.style.transform = 'scale(0.95)'}
+                  onTouchEnd={(e) => e.target.style.transform = 'scale(1)'}
+                >
+                  Siguiente →
+                </button>
+              </div>
+            )}
+
             {/* Indicador de deslizar */}
             <div style={{
               textAlign: 'center',
               marginTop: '15px',
               color: '#666',
-              fontSize: '0.9rem'
+              fontSize: window.innerWidth <= 768 ? '0.8rem' : '0.9rem'
             }}>
-              👈 Desliza para ver más experiencias 👉
+              {window.innerWidth <= 768 ?
+                'Usa los botones o desliza para navegar' :
+                '👈 Desliza para ver más experiencias 👉'
+              }
             </div>
           </div>
         )}
