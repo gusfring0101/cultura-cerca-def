@@ -39,6 +39,12 @@ export default function App() {
           height: 12px;
         }
       }
+
+      /* Spinning animation for loading */
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
     `;
     document.head.appendChild(style);
 
@@ -114,8 +120,8 @@ export default function App() {
 
   const handleSearch = async (e) => {
     e.preventDefault()
-    if (!location.trim()) {
-      setError('Por favor, introduce una ubicación o usa tu ubicación actual')
+    if (!coordinates) {
+      setError('Por favor, usa tu ubicación actual para buscar experiencias culturales')
       return
     }
 
@@ -126,12 +132,12 @@ export default function App() {
     try {
       const url = 'https://cultura-cerca.duckdns.org/webhook/cc-search'
 
-      // Preparar payload según lo que necesita n8n
+      // Preparar payload con coordenadas (ya validamos que existen)
       const payload = {
-        location: coordinates ? {
+        location: {
           lat: coordinates.lat,
           lng: coordinates.lng
-        } : location.trim(),
+        },
         maxKm: km,
         maxBudget: budget,
         prefs: prefs // Los IDs están en inglés como necesita n8n
@@ -223,26 +229,15 @@ export default function App() {
             <label style={{ display: 'block', fontWeight: '600', marginBottom: '8px', fontSize: window.innerWidth <= 768 ? '0.9rem' : '1rem' }}>
               📍 Ubicación
             </label>
-            <div style={{ display: 'flex', gap: '10px', flexDirection: window.innerWidth <= 480 ? 'column' : 'row' }}>
-              <input
-                type="text"
-                value={location}
-                onChange={(e) => setLocation(e.target.value)}
-                placeholder="Madrid, Barcelona... o usa tu ubicación"
-                style={{
-                  flex: 1,
-                  padding: '15px',
-                  border: '2px solid #ecf0f1',
-                  borderRadius: '12px',
-                  fontSize: '1rem',
-                  outline: 'none'
-                }}
-              />
+
+            {!coordinates ? (
+              // Botón para obtener ubicación (estado inicial)
               <button
                 type="button"
                 onClick={getLocation}
                 disabled={geoLoading}
                 style={{
+                  width: '100%',
                   padding: '15px 20px',
                   backgroundColor: geoLoading ? '#ccc' : '#28a745',
                   color: 'white',
@@ -250,15 +245,79 @@ export default function App() {
                   borderRadius: '12px',
                   cursor: geoLoading ? 'not-allowed' : 'pointer',
                   fontWeight: '600',
-                  minWidth: '120px'
+                  fontSize: '1rem',
+                  transition: 'all 0.3s',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px'
                 }}
+                onMouseEnter={(e) => !geoLoading && (e.target.style.backgroundColor = '#218838')}
+                onMouseLeave={(e) => !geoLoading && (e.target.style.backgroundColor = '#28a745')}
               >
-                {geoLoading ? '📍...' : '📍 Mi ubicación'}
+                {geoLoading ? (
+                  <>
+                    <span style={{ animation: 'spin 1s linear infinite', display: 'inline-block' }}>📍</span>
+                    Obteniendo ubicación...
+                  </>
+                ) : (
+                  <>
+                    📍 Usar mi ubicación actual
+                  </>
+                )}
               </button>
-            </div>
+            ) : (
+              // Barra de ubicación fija (cuando ya se tiene la ubicación)
+              <div style={{
+                width: '100%',
+                padding: '15px 20px',
+                backgroundColor: '#28a745',
+                color: 'white',
+                border: 'none',
+                borderRadius: '12px',
+                fontWeight: '600',
+                fontSize: '1rem',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                boxShadow: '0 2px 8px rgba(40, 167, 69, 0.3)'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span>📍</span>
+                  <span>Ubicación actual obtenida</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setCoordinates(null);
+                    setLocation('');
+                  }}
+                  style={{
+                    background: 'rgba(255, 255, 255, 0.2)',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '50%',
+                    width: '30px',
+                    height: '30px',
+                    cursor: 'pointer',
+                    fontSize: '1.2rem',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    transition: 'all 0.3s'
+                  }}
+                  onMouseEnter={(e) => e.target.style.background = 'rgba(255, 255, 255, 0.3)'}
+                  onMouseLeave={(e) => e.target.style.background = 'rgba(255, 255, 255, 0.2)'}
+                  title="Limpiar ubicación"
+                >
+                  ✕
+                </button>
+              </div>
+            )}
+
             {coordinates && (
-              <small style={{ color: '#666', fontSize: '0.85rem', marginTop: '5px', display: 'block' }}>
-                Coordenadas: {coordinates.lat.toFixed(4)}, {coordinates.lng.toFixed(4)}
+              <small style={{ color: '#666', fontSize: '0.85rem', marginTop: '8px', display: 'block', textAlign: 'center' }}>
+                📍 Coordenadas: {coordinates.lat.toFixed(4)}, {coordinates.lng.toFixed(4)}
               </small>
             )}
           </div>
