@@ -2,22 +2,77 @@ import { useState } from 'react'
 
 export default function App() {
   const [location, setLocation] = useState('')
+  const [coordinates, setCoordinates] = useState(null)
   const [km, setKm] = useState(15)
   const [budget, setBudget] = useState(50)
   const [prefs, setPrefs] = useState([])
   const [loading, setLoading] = useState(false)
+  const [geoLoading, setGeoLoading] = useState(false)
   const [results, setResults] = useState(null)
   const [error, setError] = useState('')
 
-  const prefOptions = ['museums', 'galleries', 'theaters', 'concerts', 'monuments', 'festivals']
+  // Preferencias en español con mapeo a inglés para n8n
+  const prefOptions = [
+    { id: 'museums', label: 'Museos' },
+    { id: 'galleries', label: 'Galerías' },
+    { id: 'theaters', label: 'Teatros' },
+    { id: 'concerts', label: 'Conciertos' },
+    { id: 'monuments', label: 'Monumentos' },
+    { id: 'festivals', label: 'Festivales' }
+  ]
 
-  const togglePref = (pref) => {
-    setPrefs(prev => prev.includes(pref) ? prev.filter(p => p !== pref) : [...prev, pref])
+  const togglePref = (prefId) => {
+    setPrefs(prev => prev.includes(prefId) ? prev.filter(p => p !== prefId) : [...prev, prefId])
+  }
+
+  const getLocation = () => {
+    setGeoLoading(true)
+    setError('')
+
+    if (!navigator.geolocation) {
+      setError('Geolocalización no es compatible con este navegador')
+      setGeoLoading(false)
+      return
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const lat = position.coords.latitude
+        const lng = position.coords.longitude
+        setCoordinates({ lat, lng })
+        setLocation(`${lat.toFixed(6)}, ${lng.toFixed(6)}`)
+        setGeoLoading(false)
+      },
+      (error) => {
+        let errorMsg = 'Error obteniendo ubicación'
+        switch(error.code) {
+          case error.PERMISSION_DENIED:
+            errorMsg = 'Permiso de ubicación denegado'
+            break
+          case error.POSITION_UNAVAILABLE:
+            errorMsg = 'Ubicación no disponible'
+            break
+          case error.TIMEOUT:
+            errorMsg = 'Tiempo de espera agotado'
+            break
+        }
+        setError(errorMsg)
+        setGeoLoading(false)
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 300000
+      }
+    )
   }
 
   const handleSearch = async (e) => {
     e.preventDefault()
-    if (!location.trim()) return
+    if (!location.trim()) {
+      setError('Por favor, introduce una ubicación o usa tu ubicación actual')
+      return
+    }
 
     setLoading(true)
     setError('')
@@ -25,15 +80,22 @@ export default function App() {
 
     try {
       const url = 'https://cultura-cerca.duckdns.org/webhook/cc-search'
+
+      // Preparar payload según lo que necesita n8n
+      const payload = {
+        location: coordinates ? {
+          lat: coordinates.lat,
+          lng: coordinates.lng
+        } : location.trim(),
+        maxKm: km,
+        maxBudget: budget,
+        prefs: prefs // Los IDs están en inglés como necesita n8n
+      }
+
       const response = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          location: location.trim(),
-          maxKm: km,
-          maxBudget: budget,
-          prefs
-        })
+        body: JSON.stringify(payload)
       })
 
       if (!response.ok) throw new Error(`Error ${response.status}`)
@@ -80,21 +142,44 @@ export default function App() {
             <label style={{ display: 'block', fontWeight: '600', marginBottom: '8px' }}>
               📍 Ubicación
             </label>
-            <input
-              type="text"
-              value={location}
-              onChange={(e) => setLocation(e.target.value)}
-              placeholder="Madrid, Barcelona..."
-              style={{
-                width: '100%',
-                padding: '15px',
-                border: '2px solid #ecf0f1',
-                borderRadius: '12px',
-                fontSize: '1rem',
-                outline: 'none'
-              }}
-              required
-            />
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <input
+                type="text"
+                value={location}
+                onChange={(e) => setLocation(e.target.value)}
+                placeholder="Madrid, Barcelona... o usa tu ubicación"
+                style={{
+                  flex: 1,
+                  padding: '15px',
+                  border: '2px solid #ecf0f1',
+                  borderRadius: '12px',
+                  fontSize: '1rem',
+                  outline: 'none'
+                }}
+              />
+              <button
+                type="button"
+                onClick={getLocation}
+                disabled={geoLoading}
+                style={{
+                  padding: '15px 20px',
+                  backgroundColor: geoLoading ? '#ccc' : '#28a745',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '12px',
+                  cursor: geoLoading ? 'not-allowed' : 'pointer',
+                  fontWeight: '600',
+                  minWidth: '120px'
+                }}
+              >
+                {geoLoading ? '📍...' : '📍 Mi ubicación'}
+              </button>
+            </div>
+            {coordinates && (
+              <small style={{ color: '#666', fontSize: '0.85rem', marginTop: '5px', display: 'block' }}>
+                Coordenadas: {coordinates.lat.toFixed(4)}, {coordinates.lng.toFixed(4)}
+              </small>
+            )}
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
@@ -151,21 +236,21 @@ export default function App() {
             }}>
               {prefOptions.map(pref => (
                 <button
-                  key={pref}
+                  key={pref.id}
                   type="button"
-                  onClick={() => togglePref(pref)}
+                  onClick={() => togglePref(pref.id)}
                   style={{
                     padding: '10px',
                     border: '2px solid #ecf0f1',
                     borderRadius: '20px',
-                    background: prefs.includes(pref) ? '#667eea' : 'white',
-                    color: prefs.includes(pref) ? 'white' : '#333',
+                    background: prefs.includes(pref.id) ? '#667eea' : 'white',
+                    color: prefs.includes(pref.id) ? 'white' : '#333',
                     cursor: 'pointer',
                     fontSize: '0.9rem',
                     transition: 'all 0.3s'
                   }}
                 >
-                  {pref}
+                  {pref.label}
                 </button>
               ))}
             </div>
@@ -199,7 +284,7 @@ export default function App() {
             borderRadius: '10px',
             border: '1px solid #fed7d7'
           }}>
-            ❌ Error: {error}
+            ❌ {error}
           </div>
         )}
 
