@@ -1,6 +1,6 @@
 {
-  "name": "culturacerca",
-  "version": "1.0.0",
+  "name": "culturacerca-engineered",
+  "version": "3.0.0",
   "type": "module",
   "scripts": {
     "build": "vite build",
