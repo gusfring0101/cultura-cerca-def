@@ -238,7 +238,7 @@ export default function App() {
                 disabled={geoLoading}
                 style={{
                   width: '100%',
-                  padding: '15px 20px',
+                  padding: '18px',
                   backgroundColor: geoLoading ? '#ccc' : '#28a745',
                   color: 'white',
                   border: 'none',
@@ -250,7 +250,8 @@ export default function App() {
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  gap: '8px'
+                  gap: '8px',
+                  boxSizing: 'border-box'
                 }}
                 onMouseEnter={(e) => !geoLoading && (e.target.style.backgroundColor = '#218838')}
                 onMouseLeave={(e) => !geoLoading && (e.target.style.backgroundColor = '#28a745')}
@@ -270,7 +271,7 @@ export default function App() {
               // Barra de ubicación fija (cuando ya se tiene la ubicación)
               <div style={{
                 width: '100%',
-                padding: '15px 20px',
+                padding: '18px',
                 backgroundColor: '#28a745',
                 color: 'white',
                 border: 'none',
@@ -280,7 +281,8 @@ export default function App() {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
-                boxShadow: '0 2px 8px rgba(40, 167, 69, 0.3)'
+                boxShadow: '0 2px 8px rgba(40, 167, 69, 0.3)',
+                boxSizing: 'border-box'
               }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <span>📍</span>
@@ -408,7 +410,9 @@ export default function App() {
               fontSize: '1.1rem',
               fontWeight: '600',
               cursor: loading ? 'not-allowed' : 'pointer',
-              marginTop: '10px'
+              marginTop: '10px',
+              width: '100%',
+              boxSizing: 'border-box'
             }}
           >
             {loading ? '🔍 Buscando...' : '🚀 Buscar Experiencias'}
