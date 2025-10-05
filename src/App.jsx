@@ -55,7 +55,7 @@ export default function App() {
   const [location, setLocation] = useState('')
   const [coordinates, setCoordinates] = useState(null)
   const [km, setKm] = useState(15)
-  const [budget, setBudget] = useState(50)
+  const [budget, setBudget] = useState(50) // Fixed deployment issue
   const [prefs, setPrefs] = useState([])
   const [loading, setLoading] = useState(false)
   const [geoLoading, setGeoLoading] = useState(false)
