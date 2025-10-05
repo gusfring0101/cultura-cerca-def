@@ -481,7 +481,7 @@ export default function App() {
                     position: 'relative',
                     minHeight: window.innerWidth <= 768 ? '350px' : '400px'
                   }}>
-                    {/* Score Badge */}
+                    {/* Popularity Badge */}
                     <div style={{
                       position: 'absolute',
                       top: '20px',
@@ -494,7 +494,7 @@ export default function App() {
                       fontWeight: '700',
                       boxShadow: '0 4px 12px rgba(102, 126, 234, 0.4)'
                     }}>
-                      ⭐ {place.score ? place.score.toFixed(2) : 'N/A'}
+                      ⭐ {place.popularity || 'N/A'}
                     </div>
 
                     {/* Nombre del lugar */}
@@ -577,6 +577,23 @@ export default function App() {
                           </div>
                         </div>
                       )}
+
+                      {/* Score (Afinidad) */}
+                      <div style={{ marginBottom: '12px' }}>
+                        <span style={{
+                          color: '#666',
+                          fontSize: '0.9rem',
+                          fontWeight: '500'
+                        }}>🎯 Score (afinidad):</span>
+                        <div style={{
+                          color: '#667eea',
+                          fontSize: '0.95rem',
+                          fontWeight: '600',
+                          marginTop: '4px'
+                        }}>
+                          {place.score ? place.score.toFixed(2) : 'N/A'}
+                        </div>
+                      </div>
                     </div>
 
                     {/* Botón para más información */}
